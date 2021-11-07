@@ -1,0 +1,5 @@
+# Signaling server
+
+*Original from [johanhelsing/matchbox](from https://github.com/johanhelsing/matchbox/tree/main/matchbox_server).*
+
+The original source is licensed under MIT+Apache 2.0 (see [the projects MIT license](../client/credits/licenses/matchbox/LICENSE-MIT)).
