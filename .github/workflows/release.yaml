@@ -13,6 +13,8 @@ env:
 jobs:
   build-macOS:
     runs-on: macOS-latest
+    env:
+      working-directory: "./client"
 
     steps:
       - name: Get tag
@@ -26,12 +28,15 @@ jobs:
           toolchain: stable
           override: true
       - name: Remove build script
+        working-directory: ${{ env.working-directory }}
         run: |
           rm build.rs
       - name: Build release
+        working-directory: ${{ env.working-directory }}
         run: |
           cargo build --release --features native
       - name: Create release
+        working-directory: ${{ env.working-directory }}
         run: |
           mkdir -p build/macos/src/Game.app/Contents/MacOS/assets
           cp -r assets/ build/macos/src/Game.app/Contents/MacOS/assets
@@ -44,13 +49,15 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.GAME_EXECUTABLE_NAME }}.dmg
+          file: ${{ env.working-directory }}/${{ env.GAME_EXECUTABLE_NAME }}.dmg
           asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_macOS.dmg
           tag: ${{ github.ref }}
           overwrite: true
 
   build-linux:
     runs-on: ubuntu-18.04
+    env:
+      working-directory: "./client"
 
     steps:
       - name: Get tag
@@ -66,27 +73,32 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Build release
+        working-directory: ${{ env.working-directory }}
         run: |
           cargo build --release --features native
       - name: Prepare release
+        working-directory: ${{ env.working-directory }}
         run: |
           strip target/release/${{ env.GAME_EXECUTABLE_NAME }}
           chmod +x target/release/${{ env.GAME_EXECUTABLE_NAME }}
           mv target/release/${{ env.GAME_EXECUTABLE_NAME }} .
       - name: Bundle release
+        working-directory: ${{ env.working-directory }}
         run: |
           tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} assets credits
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz
+          file: ${{ env.working-directory }}/${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz
           asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_linux.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
 
   build-windows:
     runs-on: windows-latest
+    env:
+      working-directory: "./client"
 
     steps:
       - name: Get tag
@@ -100,16 +112,18 @@ jobs:
           toolchain: stable
           override: true
       - name: Build release
+        working-directory: ${{ env.working-directory }}
         run: |
           cargo build --release --features native
       - name: Prepare release
+        working-directory: ${{ env.working-directory }}
         run: |
           mkdir target/release/assets && cp -r assets target/release/assets
           mkdir target/release/credits && cp -r credits target/release/credits
       - name: Zip release
         uses: papeloto/action-zip@v1
         with:
-          files: target/release/assets/ target/release/${{ env.GAME_EXECUTABLE_NAME }}.exe
+          files: ${{ env.working-directory }}/target/release/assets/ ${{ env.working-directory }}/target/release/${{ env.GAME_EXECUTABLE_NAME }}.exe
           dest: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
@@ -122,6 +136,8 @@ jobs:
 
   build-web:
     runs-on: ubuntu-latest
+    env:
+      working-directory: "./client"
 
     steps:
       - name: Get tag
@@ -137,18 +153,20 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Install cargo-make
+        working-directory: ${{ env.working-directory }}
         run: |
           cargo install cargo-make
       - name: Add wasm target
         run: |
           rustup target add wasm32-unknown-unknown
       - name: Build Release
+        working-directory: ${{ env.working-directory }}
         run: |
           cargo make release
       - name: Zip release
         uses: papeloto/action-zip@v1
         with:
-          files: build/web/
+          files: ${{ env.working-directory }}/build/web/
           dest: ${{ env.GAME_EXECUTABLE_NAME }}_web.zip
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
