@@ -5,8 +5,6 @@ publish = false
 authors = ["Niklas Eicker <git@nikl.me>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [features]
 default = [
     "bevy/bevy_gltf",
@@ -21,7 +19,7 @@ native = [
 ]
 
 [dependencies]
-bevy = { version = "0.5.0", default-features = false }
-bevy_kira_audio = { version = "0.6.0" }
-bevy_asset_loader = { version = "0.6.0" }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "6a8a8c9d21f32e0e46623db9438813b009f9e014", default-features = false }
+bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio", rev = "1c6f7a23713abcb942fde047c78c35c3a70eae6b" }
+bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", rev = "b1916e76d81aeb5097dadf7c0458488e670deb47" }
 rand = "0.8.3"
