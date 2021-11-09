@@ -92,7 +92,7 @@ fn click_play_button(
             Interaction::Clicked => {
                 commands.entity(button).despawn();
                 commands.entity(text).despawn();
-                state.set(GameState::Playing).unwrap();
+                state.set(GameState::Lobby).unwrap();
             }
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();

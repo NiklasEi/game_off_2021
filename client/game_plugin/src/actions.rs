@@ -1,5 +1,6 @@
-use crate::GameState;
 use bevy::prelude::*;
+use bevy_ggrs::GGRSApp;
+use ggrs::PlayerHandle;
 
 pub struct ActionsPlugin;
 
@@ -7,18 +8,16 @@ pub struct ActionsPlugin;
 // Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Actions>().add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(set_movement_actions.system()),
+        app
+            .with_input_system(
+            set_movement_actions
         );
     }
 }
 
-#[derive(Default)]
-pub struct Actions {
-    pub player_movement: Option<Vec2>,
-}
+fn set_movement_actions(_handle: In<PlayerHandle>, keyboard_input: Res<Input<KeyCode>>) -> Vec<u8> {
+    let mut input: u8 = 0;
 
-fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
     if GameControl::Up.just_released(&keyboard_input)
         || GameControl::Up.pressed(&keyboard_input)
         || GameControl::Left.just_released(&keyboard_input)
@@ -34,46 +33,38 @@ fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<
             || GameControl::Down.just_released(&keyboard_input)
         {
             if GameControl::Up.pressed(&keyboard_input) {
-                player_movement.y = 1.;
+                input |= INPUT_UP;
             } else if GameControl::Down.pressed(&keyboard_input) {
-                player_movement.y = -1.;
-            } else {
-                player_movement.y = 0.;
+                input |= INPUT_DOWN;
             }
         } else if GameControl::Up.just_pressed(&keyboard_input) {
-            player_movement.y = 1.;
+            input |= INPUT_UP;
         } else if GameControl::Down.just_pressed(&keyboard_input) {
-            player_movement.y = -1.;
-        } else {
-            player_movement.y = actions.player_movement.unwrap_or(Vec2::ZERO).y;
+            input |= INPUT_DOWN;
         }
 
         if GameControl::Right.just_released(&keyboard_input)
             || GameControl::Left.just_released(&keyboard_input)
         {
             if GameControl::Right.pressed(&keyboard_input) {
-                player_movement.x = 1.;
+                input |= INPUT_RIGHT;
             } else if GameControl::Left.pressed(&keyboard_input) {
-                player_movement.x = -1.;
-            } else {
-                player_movement.x = 0.;
+                input |= INPUT_LEFT;
             }
         } else if GameControl::Right.just_pressed(&keyboard_input) {
-            player_movement.x = 1.;
+            input |= INPUT_RIGHT;
         } else if GameControl::Left.just_pressed(&keyboard_input) {
-            player_movement.x = -1.;
-        } else {
-            player_movement.x = actions.player_movement.unwrap_or(Vec2::ZERO).x;
+            input |= INPUT_LEFT;
         }
-
-        if player_movement != Vec2::ZERO {
-            player_movement = player_movement.normalize();
-            actions.player_movement = Some(player_movement);
-        }
-    } else {
-        actions.player_movement = None;
     }
+
+    vec![input]
 }
+
+pub const INPUT_UP: u8 = 1 << 0;
+pub const INPUT_DOWN: u8 = 1 << 1;
+pub const INPUT_LEFT: u8 = 1 << 2;
+pub const INPUT_RIGHT: u8 = 1 << 3;
 
 enum GameControl {
     Up,
