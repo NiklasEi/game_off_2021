@@ -24,8 +24,6 @@ fn set_movement_actions(_handle: In<PlayerHandle>, keyboard_input: Res<Input<Key
         || GameControl::Right.just_released(&keyboard_input)
         || GameControl::Right.pressed(&keyboard_input)
     {
-        let mut player_movement = Vec2::ZERO;
-
         if GameControl::Up.just_released(&keyboard_input)
             || GameControl::Down.just_released(&keyboard_input)
         {

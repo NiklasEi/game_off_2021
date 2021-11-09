@@ -32,11 +32,10 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_state(GameState::Loading)
             .add_plugin(GGRSPlugin)
-            .with_fps(FPS)
+            .with_update_frequency(FPS)
             .register_rollback_type::<Transform>()
             .insert_resource(FrameCount { frame: 0 })
             .register_rollback_type::<FrameCount>()
-            .add_rollback_system(increase_frame_system)
             .add_plugin(LobbyPlugin)
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
@@ -53,7 +52,7 @@ impl Plugin for GamePlugin {
 
 // You can also register resources. If your Component / Resource implements Hash, you can make use of `#[reflect(Hash)]`
 // in order to allow a GGRS `SyncTestSession` to construct a checksum for a world snapshot
-#[derive(Default, Reflect, Hash)]
+#[derive(Component, Default, Reflect, Hash)]
 #[reflect(Hash)]
 pub struct FrameCount {
     pub frame: u32,

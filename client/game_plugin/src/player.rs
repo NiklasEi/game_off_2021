@@ -1,8 +1,8 @@
 use crate::actions::{INPUT_DOWN, INPUT_LEFT, INPUT_RIGHT, INPUT_UP};
 use crate::loading::TextureAssets;
-use crate::GameState;
+use crate::{increase_frame_system, GameState};
 use bevy::prelude::*;
-use bevy_ggrs::{Rollback, RollbackIdProvider};
+use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
 
 pub struct PlayerPlugin;
@@ -16,12 +16,17 @@ pub struct Player {
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
+        let mut rollback_schedule = Schedule::default();
+        let mut default_stage = SystemStage::parallel();
+        default_stage.add_system(move_player);
+        default_stage.add_system(increase_frame_system);
+        rollback_schedule.add_stage("default_rollback_stage", default_stage);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player)
                 .with_system(spawn_camera),
         )
-        .add_rollback_system(move_player);
+        .with_rollback_schedule(rollback_schedule);
     }
 }
 

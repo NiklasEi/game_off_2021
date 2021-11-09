@@ -74,7 +74,7 @@ fn lobby_startup(
                     text: Text::with_section(
                         "Entering lobby...",
                         TextStyle {
-                            font: asset_server.load("fonts/quicksand-light.ttf"),
+                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: 96.,
                             color: Color::BLACK,
                         },
