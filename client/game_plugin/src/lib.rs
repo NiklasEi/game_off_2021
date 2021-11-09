@@ -1,16 +1,16 @@
 mod actions;
 mod loading;
+mod lobby;
 mod menu;
 mod player;
-mod lobby;
 
 use crate::actions::ActionsPlugin;
 use crate::loading::LoadingPlugin;
+use crate::lobby::LobbyPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
-use crate::lobby::LobbyPlugin;
 
-use bevy_ggrs::{GGRSPlugin, GGRSApp};
+use bevy_ggrs::{GGRSApp, GGRSPlugin};
 
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};

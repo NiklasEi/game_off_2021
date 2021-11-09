@@ -1,14 +1,14 @@
+use crate::actions::{INPUT_DOWN, INPUT_LEFT, INPUT_RIGHT, INPUT_UP};
 use crate::loading::TextureAssets;
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
-use crate::actions::{INPUT_UP, INPUT_DOWN, INPUT_LEFT, INPUT_RIGHT};
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct Player{
+pub struct Player {
     pub handle: u32,
 }
 
@@ -47,7 +47,7 @@ fn spawn_player(
                 transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
                 ..Default::default()
             })
-            .insert(Player {handle})
+            .insert(Player { handle })
             .insert(Rollback::new(rip.next_id()));
     }
 }

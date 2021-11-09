@@ -1,9 +1,9 @@
+use crate::{GameState, FPS};
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
-use crate::{GameState, FPS};
-use matchbox_socket::WebRtcNonBlockingSocket;
-use ggrs::PlayerType;
 use bevy_ggrs::CommandsExt;
+use ggrs::PlayerType;
+use matchbox_socket::WebRtcNonBlockingSocket;
 
 const INPUT_SIZE: usize = std::mem::size_of::<u8>();
 
@@ -11,12 +11,12 @@ pub struct LobbyPlugin;
 
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_resource::<Args>().add_system_set(
-            SystemSet::on_enter(GameState::Lobby)
-                .with_system(lobby_startup)
-                .with_system(start_matchbox_socket),
-        )
+        app.init_resource::<Args>()
+            .add_system_set(
+                SystemSet::on_enter(GameState::Lobby)
+                    .with_system(lobby_startup)
+                    .with_system(start_matchbox_socket),
+            )
             .add_system_set(SystemSet::on_update(GameState::Lobby).with_system(lobby_system))
             .add_system_set(SystemSet::on_exit(GameState::Lobby).with_system(lobby_cleanup));
     }
@@ -150,7 +150,6 @@ fn lobby_cleanup(query: Query<Entity, With<LobbyUI>>, mut commands: Commands) {
     }
 }
 
-
 pub struct Args {
     pub matchbox: String,
     pub room: Option<String>,
@@ -164,7 +163,7 @@ impl Default for Args {
             matchbox: "ws://127.0.0.1:3536".to_owned(),
             room: None,
             players: 2,
-            log_filter: "info".to_owned()
+            log_filter: "info".to_owned(),
         }
     }
 }
