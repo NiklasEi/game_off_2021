@@ -104,7 +104,6 @@ fn lobby_system(
     if remaining > 0 {
         return;
     }
-
     info!("All peers have joined, going in-game");
 
     // consume the socket (currently required because ggrs takes ownership of its socket)
@@ -138,7 +137,6 @@ fn lobby_system(
     // start the GGRS session
     commands.start_p2p_session(p2p_session);
 
-    // transition to in-game state
     app_state
         .set(GameState::Playing)
         .expect("Tried to go in-game while already in-game");

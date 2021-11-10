@@ -50,8 +50,6 @@ impl Plugin for GamePlugin {
     }
 }
 
-// You can also register resources. If your Component / Resource implements Hash, you can make use of `#[reflect(Hash)]`
-// in order to allow a GGRS `SyncTestSession` to construct a checksum for a world snapshot
 #[derive(Component, Default, Reflect, Hash)]
 #[reflect(Hash)]
 pub struct FrameCount {

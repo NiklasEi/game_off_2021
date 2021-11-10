@@ -1,4 +1,4 @@
-use crate::actions::{INPUT_DOWN, INPUT_LEFT, INPUT_RIGHT, INPUT_UP};
+use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::{increase_frame_system, GameState};
 use bevy::prelude::*;
@@ -61,21 +61,12 @@ fn move_player(
     mut player_query: Query<(&mut Transform, &Player), With<Rollback>>,
     inputs: Res<Vec<GameInput>>,
 ) {
-    let speed = 3.;
-
     for (mut player_transform, p) in player_query.iter_mut() {
         let input = inputs[p.handle as usize].buffer[0];
-        if input & INPUT_UP != 0 && input & INPUT_DOWN == 0 {
-            player_transform.translation.y -= speed;
-        }
-        if input & INPUT_UP == 0 && input & INPUT_DOWN != 0 {
-            player_transform.translation.y += speed;
-        }
-        if input & INPUT_LEFT != 0 && input & INPUT_RIGHT == 0 {
-            player_transform.translation.x -= speed;
-        }
-        if input & INPUT_LEFT == 0 && input & INPUT_RIGHT != 0 {
-            player_transform.translation.x += speed;
+        let action: Actions = input.into();
+
+        if let Some(movement) = action.player_movement {
+            player_transform.translation += Vec3::new(movement.x, movement.y, 0.);
         }
     }
 }
