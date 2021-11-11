@@ -2,12 +2,14 @@ mod actions;
 mod loading;
 mod lobby;
 mod menu;
+mod orientation;
 mod player;
 
 use crate::actions::ActionsPlugin;
 use crate::loading::LoadingPlugin;
 use crate::lobby::LobbyPlugin;
 use crate::menu::MenuPlugin;
+use crate::orientation::OrientationPlugin;
 use crate::player::PlayerPlugin;
 
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
@@ -40,7 +42,8 @@ impl Plugin for GamePlugin {
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
             .add_plugin(ActionsPlugin)
-            .add_plugin(PlayerPlugin);
+            .add_plugin(PlayerPlugin)
+            .add_plugin(OrientationPlugin);
 
         #[cfg(debug_assertions)]
         {

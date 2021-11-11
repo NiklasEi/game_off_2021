@@ -1,11 +1,16 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
+use crate::lobby::LocalPlayerHandle;
+use crate::orientation::{Orient, Orientation};
 use crate::{increase_frame_system, GameState};
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
 
 pub struct PlayerPlugin;
+
+#[derive(Component)]
+pub struct LocalPlayer;
 
 #[derive(Component)]
 pub struct Player {
@@ -30,8 +35,24 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+#[derive(Component)]
+pub struct PlayerCamera;
+
+fn spawn_camera(
+    mut commands: Commands,
+    orientation: Res<Orientation>,
+    mut rip: ResMut<RollbackIdProvider>,
+) {
+    let mut camera = OrthographicCameraBundle::new_3d();
+    camera.orthographic_projection.scale = 100.0;
+    camera.transform =
+        Transform::from_translation(orientation.camera_position()).looking_at(Vec3::ZERO, Vec3::Y);
+
+    // camera
+    commands
+        .spawn_bundle(camera)
+        .insert(PlayerCamera)
+        .insert(Rollback::new(rip.next_id()));
 }
 
 fn spawn_player(
@@ -40,33 +61,49 @@ fn spawn_player(
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     p2p_session: Option<Res<P2PSession>>,
+    orientation: Res<Orientation>,
+    local_player: Res<LocalPlayerHandle>,
 ) {
     let num_players = p2p_session
         .map(|s| s.num_players())
         .expect("No GGRS session found");
 
     for handle in 0..num_players {
-        commands
-            .spawn_bundle(SpriteBundle {
-                material: materials.add(textures.texture_bevy.clone().into()),
-                transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
-                ..Default::default()
-            })
+        let mut entity = commands.spawn_bundle(SpriteBundle {
+            material: materials.add(textures.player.clone().into()),
+            transform: Transform::from_xyz(0., 32., 0.)
+                .looking_at(orientation.camera_position(), Vec3::Y),
+            ..Default::default()
+        });
+        entity
             .insert(Player { handle })
-            .insert(Rollback::new(rip.next_id()));
+            .insert(Rollback::new(rip.next_id()))
+            .insert(Orient);
+        if local_player.0 == handle as usize {
+            entity.insert(LocalPlayer);
+        }
     }
 }
 
 fn move_player(
     mut player_query: Query<(&mut Transform, &Player), With<Rollback>>,
+    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>, With<Rollback>)>,
+    orientation: Res<Orientation>,
     inputs: Res<Vec<GameInput>>,
+    local_player: Res<LocalPlayerHandle>,
 ) {
-    for (mut player_transform, p) in player_query.iter_mut() {
-        let input = inputs[p.handle as usize].buffer[0];
+    for (mut player_transform, player) in player_query.iter_mut() {
+        let input = inputs[player.handle as usize].buffer[0];
         let action: Actions = input.into();
 
-        if let Some(movement) = action.player_movement {
-            player_transform.translation += Vec3::new(movement.x, movement.y, 0.);
+        if let Some(mut movement) = action.player_movement {
+            movement = orientation.orient_movement(movement);
+            player_transform.translation += Vec3::new(movement.x, 0., movement.y);
+
+            if local_player.0 == player.handle as usize {
+                let mut camera_position = camera.single_mut();
+                camera_position.translation += Vec3::new(movement.x, 0., movement.y);
+            }
         }
     }
 }

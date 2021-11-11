@@ -87,6 +87,8 @@ fn lobby_startup(
         .insert(LobbyUI);
 }
 
+pub struct LocalPlayerHandle(pub usize);
+
 fn lobby_system(
     mut app_state: ResMut<State<GameState>>,
     args: Res<Args>,
@@ -128,6 +130,8 @@ fn lobby_system(
         if player == PlayerType::Local {
             // set input delay for the local player
             p2p_session.set_frame_delay(2, i).unwrap();
+            info!("Local player has handle {}", i);
+            commands.insert_resource(LocalPlayerHandle(i));
         }
     }
 

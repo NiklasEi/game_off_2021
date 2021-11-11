@@ -1,5 +1,5 @@
 use futures::{lock::Mutex, stream::SplitSink, StreamExt};
-use log::{error, info};
+use log::{error, info, warn};
 use std::{
     collections::{HashMap, HashSet},
     convert::Infallible,
@@ -159,10 +159,14 @@ fn parse_request(request: Result<Message, Error>) -> Result<PeerRequest, Request
     let request = request?;
 
     if !request.is_text() {
+        warn!("Got non-text request: {:?}", request);
         return Err(RequestError::TextError);
     }
 
-    let request = request.to_str().map_err(|_| RequestError::TextError)?;
+    let request = request.to_str().map_err(|e| {
+        warn!("Error trying to interpret message as string: {:?}", e);
+        RequestError::TextError
+    })?;
 
     let request: PeerRequest = serde_json::from_str(request)?;
 
@@ -241,10 +245,10 @@ async fn handle_ws(websocket: WebSocket, state: Arc<Mutex<State>>, requested_roo
                 if let Err(e) = state
                     .clients
                     .get(&receiver)
-                    .unwrap()
+                    .expect("Failed to get client for receiver")
                     .sender
                     .as_ref()
-                    .unwrap()
+                    .expect("No sender on client")
                     .send(Ok(event))
                 {
                     error!("error sending: {:?}", e);
