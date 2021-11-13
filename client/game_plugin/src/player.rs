@@ -6,6 +6,7 @@ use crate::GameState;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
+use bevy::pbr::AmbientLight;
 
 pub struct PlayerPlugin;
 
@@ -25,7 +26,10 @@ impl Plugin for PlayerPlugin {
         let mut default_stage = SystemStage::parallel();
         default_stage.add_system(move_player);
         rollback_schedule.add_stage("default_rollback_stage", default_stage);
-        app.add_system_set(
+        app.insert_resource(AmbientLight {
+            color: Color::rgb(1.0, 1.0, 1.0),
+            brightness: 0.4,
+        }).add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player)
                 .with_system(spawn_camera)
