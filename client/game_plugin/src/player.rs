@@ -2,7 +2,7 @@ use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::lobby::LocalPlayerHandle;
 use crate::orientation::{Orient, Orientation};
-use crate::{increase_frame_system, GameState};
+use crate::GameState;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
@@ -24,12 +24,13 @@ impl Plugin for PlayerPlugin {
         let mut rollback_schedule = Schedule::default();
         let mut default_stage = SystemStage::parallel();
         default_stage.add_system(move_player);
-        default_stage.add_system(increase_frame_system);
         rollback_schedule.add_stage("default_rollback_stage", default_stage);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player)
-                .with_system(spawn_camera),
+                .with_system(spawn_camera)
+                .with_system(spawn_tree)
+                .with_system(spawn_map),
         )
         .with_rollback_schedule(rollback_schedule);
     }
@@ -41,7 +42,6 @@ pub struct PlayerCamera;
 fn spawn_camera(
     mut commands: Commands,
     orientation: Res<Orientation>,
-    mut rip: ResMut<RollbackIdProvider>,
 ) {
     let mut camera = OrthographicCameraBundle::new_3d();
     camera.orthographic_projection.scale = 100.0;
@@ -51,8 +51,53 @@ fn spawn_camera(
     // camera
     commands
         .spawn_bundle(camera)
-        .insert(PlayerCamera)
-        .insert(Rollback::new(rip.next_id()));
+        .insert(PlayerCamera);
+}
+
+fn spawn_tree(
+    mut commands: Commands,
+    texture_assets: Res<TextureAssets>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    orientation: Res<Orientation>,
+) {
+    let tree_positions = vec![Vec3::new(64., 32., 0.), Vec3::new(0., 32., 250.)];
+    for position in tree_positions {
+        commands
+            .spawn_bundle(SpriteBundle {
+                material: materials.add(texture_assets.tree.clone().into()),
+                transform: Transform::from_translation(position)
+                    .looking_at(orientation.camera_position() + position, Vec3::Y),
+                ..Default::default()
+            })
+            .insert(Orient);
+    }
+}
+
+fn spawn_map(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    texture_assets: Res<TextureAssets>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for column in -5..=5 {
+        for row in -5..=5 {
+            let texture = if column == row {
+                texture_assets.ground.clone()
+            } else {
+                texture_assets.grass.clone()
+            };
+            commands.spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Plane { size: 64.0 })),
+                material: materials.add(texture.into()),
+                transform: Transform::from_translation(Vec3::new(
+                    64. * column.clone() as f32,
+                    0.,
+                    64. * row as f32,
+                )),
+                ..Default::default()
+            });
+        }
+    }
 }
 
 fn spawn_player(
@@ -87,22 +132,24 @@ fn spawn_player(
 
 fn move_player(
     mut player_query: Query<(&mut Transform, &Player), With<Rollback>>,
-    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>, With<Rollback>)>,
+    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
     orientation: Res<Orientation>,
     inputs: Res<Vec<GameInput>>,
     local_player: Res<LocalPlayerHandle>,
 ) {
+    let speed = 3.;
     for (mut player_transform, player) in player_query.iter_mut() {
         let input = inputs[player.handle as usize].buffer[0];
         let action: Actions = input.into();
 
         if let Some(mut movement) = action.player_movement {
             movement = orientation.orient_movement(movement);
+            movement *= speed;
             player_transform.translation += Vec3::new(movement.x, 0., movement.y);
 
             if local_player.0 == player.handle as usize {
                 let mut camera_position = camera.single_mut();
-                camera_position.translation += Vec3::new(movement.x, 0., movement.y);
+                camera_position.translation = player_transform.translation + orientation.camera_position();
             }
         }
     }

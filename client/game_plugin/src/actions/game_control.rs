@@ -12,16 +12,16 @@ impl From<&Actions> for u8 {
 
         if let Some(movement) = actions.player_movement {
             if movement.x > 0. {
-                input |= INPUT_RIGHT;
+                input |= INPUT_UP;
             }
             if movement.x < 0. {
-                input |= INPUT_LEFT;
-            }
-            if movement.y > 0. {
                 input |= INPUT_DOWN;
             }
+            if movement.y > 0. {
+                input |= INPUT_RIGHT;
+            }
             if movement.y < 0. {
-                input |= INPUT_UP;
+                input |= INPUT_LEFT;
             }
         }
 
@@ -32,19 +32,18 @@ impl From<&Actions> for u8 {
 impl From<u8> for Actions {
     fn from(input: u8) -> Self {
         let mut player_movement = Vec2::ZERO;
-        let speed = 3.;
 
         if input & INPUT_UP != 0 {
-            player_movement.y -= speed;
+            player_movement.x = 1.;
         }
         if input & INPUT_DOWN != 0 {
-            player_movement.y += speed;
-        }
-        if input & INPUT_LEFT != 0 {
-            player_movement.x -= speed;
+            player_movement.x = -1.;
         }
         if input & INPUT_RIGHT != 0 {
-            player_movement.x += speed;
+            player_movement.y = 1.;
+        }
+        if input & INPUT_LEFT != 0 {
+            player_movement.y = -1.;
         }
 
         if player_movement != Vec2::ZERO {

@@ -36,8 +36,6 @@ impl Plugin for GamePlugin {
             .add_plugin(GGRSPlugin)
             .with_update_frequency(FPS)
             .register_rollback_type::<Transform>()
-            .insert_resource(FrameCount { frame: 0 })
-            .register_rollback_type::<FrameCount>()
             .add_plugin(LobbyPlugin)
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
@@ -51,15 +49,4 @@ impl Plugin for GamePlugin {
                 .add_plugin(LogDiagnosticsPlugin::default());
         }
     }
-}
-
-#[derive(Component, Default, Reflect, Hash)]
-#[reflect(Hash)]
-pub struct FrameCount {
-    pub frame: u32,
-}
-
-pub fn increase_frame_system(mut frame_count: ResMut<FrameCount>) {
-    println!("Frame is {}", frame_count.frame);
-    frame_count.frame += 1;
 }

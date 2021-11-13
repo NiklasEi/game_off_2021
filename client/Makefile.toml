@@ -3,7 +3,7 @@
 #   Build a web release by running `cargo make release` (release is the `build/web` directory)
 
 [env]
-TARGET_DIR = "target/wasm32-unknown-unknown/release/"
+TARGET_DIR = "target/wasm32-unknown-unknown/debug/"
 
 [tasks.release]
 dependencies = ["build-and-bind-wasm", "copy-files-for-release"]
@@ -19,7 +19,7 @@ command = "wasm-bindgen"
 dependencies = ["cargo-build-web", "wasm-bindgen-cli"]
 
 [tasks.cargo-build-web]
-args = ["build", "--target", "wasm32-unknown-unknown", "--features", "web", "--release"]
+args = ["build", "--target", "wasm32-unknown-unknown", "--features", "web"]
 command = "cargo"
 
 [tasks.wasm-bindgen-cli]

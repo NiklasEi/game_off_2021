@@ -21,7 +21,7 @@ pub struct Actions {
 
 fn set_movement_actions(
     _handle: In<PlayerHandle>,
-    mut actions: ResMut<Actions>,
+    mut previous_action: ResMut<Actions>,
     keyboard_input: Res<Input<KeyCode>>,
 ) -> Vec<u8> {
     if GameControl::Up.just_released(&keyboard_input)
@@ -50,7 +50,7 @@ fn set_movement_actions(
         } else if GameControl::Down.just_pressed(&keyboard_input) {
             player_movement.x = -1.;
         } else {
-            player_movement.x = actions.player_movement.unwrap_or(Vec2::ZERO).y;
+            player_movement.x = previous_action.player_movement.unwrap_or(Vec2::ZERO).x;
         }
 
         if GameControl::Right.just_released(&keyboard_input)
@@ -68,16 +68,13 @@ fn set_movement_actions(
         } else if GameControl::Left.just_pressed(&keyboard_input) {
             player_movement.y = -1.;
         } else {
-            player_movement.y = actions.player_movement.unwrap_or(Vec2::ZERO).x;
+            player_movement.y = previous_action.player_movement.unwrap_or(Vec2::ZERO).y;
         }
 
-        if player_movement != Vec2::ZERO {
-            player_movement = player_movement.normalize();
-        }
-        actions.player_movement = Some(player_movement);
+        previous_action.player_movement = Some(player_movement);
     } else {
-        actions.player_movement = None;
+        previous_action.player_movement = None;
     }
 
-    vec![(&*actions as &Actions).into()]
+    vec![(&*previous_action as &Actions).into()]
 }

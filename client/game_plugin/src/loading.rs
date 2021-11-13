@@ -26,4 +26,10 @@ pub struct FontAssets {
 pub struct TextureAssets {
     #[asset(path = "textures/player.png")]
     pub player: Handle<Texture>,
+    #[asset(path = "textures/tree.png")]
+    pub tree: Handle<Texture>,
+    #[asset(path = "textures/grass.png")]
+    pub grass: Handle<Texture>,
+    #[asset(path = "textures/ground.png")]
+    pub ground: Handle<Texture>,
 }
