@@ -1,7 +1,7 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::lobby::LocalPlayerHandle;
-use crate::orientation::{Orient, Orientation, turn_camera, PlayerOrientations};
+use crate::orientation::{Orient, turn_camera, PlayerOrientations};
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};

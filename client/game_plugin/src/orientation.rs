@@ -2,7 +2,7 @@ use crate::player::{LocalPlayer, PlayerCamera, Player};
 use crate::actions::{Actions, TurnDirection};
 use bevy::math::Mat2;
 use bevy::prelude::*;
-use std::ops::{Mul, Deref};
+use std::ops::Mul;
 use ggrs::GameInput;
 
 const CAMERA_DISTANCE: f32 = 90.;
@@ -10,9 +10,11 @@ const CAMERA_DISTANCE: f32 = 90.;
 #[derive(Component)]
 pub struct Orient;
 
-// #[derive(Reflect, Component)]
+#[derive(Component, Debug, PartialEq, Clone, Reflect, Default)]
+#[reflect(Component, PartialEq)]
 pub struct PlayerOrientations(pub Vec<Orientation>);
 
+#[derive(Clone, PartialEq, Debug, Reflect)]
 pub enum Orientation {
     North,
     NorthEast,
