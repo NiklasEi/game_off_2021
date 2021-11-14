@@ -1,7 +1,7 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::lobby::LocalPlayerHandle;
-use crate::orientation::{Orient, Orientation};
+use crate::orientation::{Orient, Orientation, turn_camera, PlayerOrientations};
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
@@ -11,7 +11,10 @@ use bevy::pbr::AmbientLight;
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct LocalPlayer;
+pub struct LocalPlayer {
+    pub handle: usize,
+    pub entity: Entity
+}
 
 #[derive(Component)]
 pub struct Player {
@@ -25,6 +28,7 @@ impl Plugin for PlayerPlugin {
         let mut rollback_schedule = Schedule::default();
         let mut default_stage = SystemStage::parallel();
         default_stage.add_system(move_player);
+        default_stage.add_system(turn_camera);
         rollback_schedule.add_stage("default_rollback_stage", default_stage);
         app.insert_resource(AmbientLight {
             color: Color::rgb(1.0, 1.0, 1.0),
@@ -45,12 +49,13 @@ pub struct PlayerCamera;
 
 fn spawn_camera(
     mut commands: Commands,
-    orientation: Res<Orientation>,
+    orientation: Res<PlayerOrientations>,
+    local_player: Res<LocalPlayerHandle>,
 ) {
     let mut camera = OrthographicCameraBundle::new_3d();
     camera.orthographic_projection.scale = 100.0;
     camera.transform =
-        Transform::from_translation(orientation.camera_position()).looking_at(Vec3::ZERO, Vec3::Y);
+        Transform::from_translation(orientation.0[local_player.0].camera_position()).looking_at(Vec3::ZERO, Vec3::Y);
 
     // camera
     commands
@@ -62,7 +67,8 @@ fn spawn_tree(
     mut commands: Commands,
     texture_assets: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    orientation: Res<Orientation>,
+    orientation: Res<PlayerOrientations>,
+    local_player: Res<LocalPlayerHandle>,
 ) {
     let tree_positions = vec![Vec3::new(64., 32., 0.), Vec3::new(0., 32., 250.)];
     for position in tree_positions {
@@ -70,7 +76,7 @@ fn spawn_tree(
             .spawn_bundle(SpriteBundle {
                 material: materials.add(texture_assets.tree.clone().into()),
                 transform: Transform::from_translation(position)
-                    .looking_at(orientation.camera_position() + position, Vec3::Y),
+                    .looking_at(orientation.0[local_player.0].camera_position() + position, Vec3::Y),
                 ..Default::default()
             })
             .insert(Orient);
@@ -110,7 +116,7 @@ fn spawn_player(
     textures: Res<TextureAssets>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     p2p_session: Option<Res<P2PSession>>,
-    orientation: Res<Orientation>,
+    orientation: Res<PlayerOrientations>,
     local_player: Res<LocalPlayerHandle>,
 ) {
     let num_players = p2p_session
@@ -121,7 +127,7 @@ fn spawn_player(
         let mut entity = commands.spawn_bundle(SpriteBundle {
             material: materials.add(textures.player.clone().into()),
             transform: Transform::from_xyz(0., 32., 0.)
-                .looking_at(orientation.camera_position(), Vec3::Y),
+                .looking_at(orientation.0[local_player.0].camera_position(), Vec3::Y),
             ..Default::default()
         });
         entity
@@ -129,7 +135,11 @@ fn spawn_player(
             .insert(Rollback::new(rip.next_id()))
             .insert(Orient);
         if local_player.0 == handle as usize {
-            entity.insert(LocalPlayer);
+            let entity_id = entity.id();
+            commands.insert_resource(LocalPlayer {
+                handle: handle as usize,
+                entity: entity_id
+            });
         }
     }
 }
@@ -137,7 +147,7 @@ fn spawn_player(
 fn move_player(
     mut player_query: Query<(&mut Transform, &Player), With<Rollback>>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
-    orientation: Res<Orientation>,
+    orientation: Res<PlayerOrientations>,
     inputs: Res<Vec<GameInput>>,
     local_player: Res<LocalPlayerHandle>,
 ) {
@@ -147,13 +157,13 @@ fn move_player(
         let action: Actions = input.into();
 
         if let Some(mut movement) = action.player_movement {
-            movement = orientation.orient_movement(movement);
+            movement = orientation.0[player.handle as usize].orient_movement(movement);
             movement *= speed;
             player_transform.translation += Vec3::new(movement.x, 0., movement.y);
 
             if local_player.0 == player.handle as usize {
                 let mut camera_position = camera.single_mut();
-                camera_position.translation = player_transform.translation + orientation.camera_position();
+                camera_position.translation = player_transform.translation + orientation.0[player.handle as usize].camera_position();
             }
         }
     }

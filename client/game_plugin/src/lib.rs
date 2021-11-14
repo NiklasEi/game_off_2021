@@ -9,7 +9,7 @@ use crate::actions::ActionsPlugin;
 use crate::loading::LoadingPlugin;
 use crate::lobby::LobbyPlugin;
 use crate::menu::MenuPlugin;
-use crate::orientation::OrientationPlugin;
+use crate::orientation::Orientation;
 use crate::player::PlayerPlugin;
 
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
@@ -36,12 +36,12 @@ impl Plugin for GamePlugin {
             .add_plugin(GGRSPlugin)
             .with_update_frequency(FPS)
             .register_rollback_type::<Transform>()
+            // .register_rollback_type::<PlayerOrientations>()
             .add_plugin(LobbyPlugin)
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
             .add_plugin(ActionsPlugin)
-            .add_plugin(PlayerPlugin)
-            .add_plugin(OrientationPlugin);
+            .add_plugin(PlayerPlugin);
 
         #[cfg(debug_assertions)]
         {

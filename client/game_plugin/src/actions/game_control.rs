@@ -1,10 +1,12 @@
-use crate::actions::Actions;
+use crate::actions::{Actions, TurnDirection};
 use bevy::prelude::*;
 
 pub const INPUT_UP: u8 = 1 << 0;
 pub const INPUT_DOWN: u8 = 1 << 1;
 pub const INPUT_LEFT: u8 = 1 << 2;
 pub const INPUT_RIGHT: u8 = 1 << 3;
+pub const INPUT_TURN_CLOCKWISE: u8 = 1 << 4;
+pub const INPUT_TURN_ANTI_CLOCKWISE: u8 = 1 << 5;
 
 impl From<&Actions> for u8 {
     fn from(actions: &Actions) -> Self {
@@ -22,6 +24,14 @@ impl From<&Actions> for u8 {
             }
             if movement.y < 0. {
                 input |= INPUT_LEFT;
+            }
+        }
+
+        if let Some(turn) = &actions.turn {
+            if turn == &TurnDirection::Clockwise {
+                input |= INPUT_TURN_CLOCKWISE;
+            } else {
+                input |= INPUT_TURN_ANTI_CLOCKWISE;
             }
         }
 
@@ -50,8 +60,17 @@ impl From<u8> for Actions {
             player_movement = player_movement.normalize();
         }
 
+        let turn = if input & INPUT_TURN_CLOCKWISE != 0 {
+            Some(TurnDirection::Clockwise)
+        } else if input & INPUT_TURN_ANTI_CLOCKWISE != 0 {
+            Some(TurnDirection::AntiClockwise)
+        } else {
+            None
+        };
+
         Actions {
             player_movement: Some(player_movement),
+            turn
         }
     }
 }
@@ -61,6 +80,8 @@ pub enum GameControl {
     Down,
     Left,
     Right,
+    TurnClockwise,
+    TurnAntiClockwise
 }
 
 impl GameControl {
@@ -82,6 +103,12 @@ impl GameControl {
                 keyboard_input.just_released(KeyCode::D)
                     || keyboard_input.just_released(KeyCode::Right)
             }
+            GameControl::TurnClockwise => {
+                keyboard_input.just_released(KeyCode::E)
+            }
+            GameControl::TurnAntiClockwise => {
+                keyboard_input.just_released(KeyCode::Q)
+            }
         }
     }
 
@@ -98,6 +125,12 @@ impl GameControl {
             }
             GameControl::Right => {
                 keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right)
+            }
+            GameControl::TurnClockwise => {
+                keyboard_input.pressed(KeyCode::E)
+            }
+            GameControl::TurnAntiClockwise => {
+                keyboard_input.pressed(KeyCode::Q)
             }
         }
     }
@@ -118,6 +151,12 @@ impl GameControl {
             GameControl::Right => {
                 keyboard_input.just_pressed(KeyCode::D)
                     || keyboard_input.just_pressed(KeyCode::Right)
+            }
+            GameControl::TurnClockwise => {
+                keyboard_input.just_pressed(KeyCode::E)
+            }
+            GameControl::TurnAntiClockwise => {
+                keyboard_input.just_pressed(KeyCode::Q)
             }
         }
     }

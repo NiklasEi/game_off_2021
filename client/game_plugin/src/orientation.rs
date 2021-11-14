@@ -1,24 +1,19 @@
-use crate::player::{LocalPlayer, PlayerCamera};
-use crate::GameState;
+use crate::player::{LocalPlayer, PlayerCamera, Player};
+use crate::actions::{Actions, TurnDirection};
 use bevy::math::Mat2;
 use bevy::prelude::*;
-use std::ops::Mul;
+use std::ops::{Mul, Deref};
+use ggrs::GameInput;
 
 const CAMERA_DISTANCE: f32 = 90.;
 
-pub struct OrientationPlugin;
-
-impl Plugin for OrientationPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(Orientation::North)
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(turn_camera));
-    }
-}
-
 #[derive(Component)]
-pub(crate) struct Orient;
+pub struct Orient;
 
-pub(crate) enum Orientation {
+// #[derive(Reflect, Component)]
+pub struct PlayerOrientations(pub Vec<Orientation>);
+
+pub enum Orientation {
     North,
     NorthEast,
     East,
@@ -49,29 +44,29 @@ impl Orientation {
         }
     }
 
-    fn turn_clockwise(&self) -> Self {
+    fn turn_clockwise(&mut self) {
         match self {
-            &Orientation::North => Orientation::NorthEast,
-            &Orientation::NorthEast => Orientation::East,
-            &Orientation::East => Orientation::SouthEast,
-            &Orientation::SouthEast => Orientation::South,
-            &Orientation::South => Orientation::SouthWest,
-            &Orientation::SouthWest => Orientation::West,
-            &Orientation::West => Orientation::NorthWest,
-            &Orientation::NorthWest => Orientation::North,
+            &mut Orientation::North => *self = Orientation::NorthEast,
+            &mut Orientation::NorthEast => *self = Orientation::East,
+            &mut Orientation::East => *self = Orientation::SouthEast,
+            &mut Orientation::SouthEast => *self = Orientation::South,
+            &mut Orientation::South => *self = Orientation::SouthWest,
+            &mut Orientation::SouthWest => *self = Orientation::West,
+            &mut Orientation::West => *self = Orientation::NorthWest,
+            &mut Orientation::NorthWest => *self = Orientation::North,
         }
     }
 
-    fn turn_anti_clockwise(&self) -> Self {
+    fn turn_anti_clockwise(&mut self) {
         match self {
-            &Orientation::North => Orientation::NorthWest,
-            &Orientation::NorthEast => Orientation::North,
-            &Orientation::East => Orientation::NorthEast,
-            &Orientation::SouthEast => Orientation::East,
-            &Orientation::South => Orientation::SouthEast,
-            &Orientation::SouthWest => Orientation::South,
-            &Orientation::West => Orientation::SouthWest,
-            &Orientation::NorthWest => Orientation::West,
+            &mut Orientation::North => *self = Orientation::NorthWest,
+            &mut Orientation::NorthEast => *self = Orientation::North,
+            &mut Orientation::East => *self = Orientation::NorthEast,
+            &mut Orientation::SouthEast => *self = Orientation::East,
+            &mut Orientation::South => *self = Orientation::SouthEast,
+            &mut Orientation::SouthWest => *self = Orientation::South,
+            &mut Orientation::West => *self = Orientation::SouthWest,
+            &mut Orientation::NorthWest => *self = Orientation::West,
         }
     }
 
@@ -94,53 +89,44 @@ impl Orientation {
     }
 }
 
-pub(crate) struct RotationTimer {
-    timer: Timer,
-}
-
-impl Default for RotationTimer {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(0.2, false),
-        }
-    }
-}
-
-fn turn_camera(
-    input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    mut rotation_timer: Local<RotationTimer>,
-    local_player: Query<Entity, With<LocalPlayer>>,
+pub fn turn_camera(
     mut orient: Query<&mut Transform, (With<Orient>, Without<PlayerCamera>)>,
     mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Orient>)>,
-    mut orientation: ResMut<Orientation>,
+    mut orientation: ResMut<PlayerOrientations>,
+    mut player_query: Query<&Player>,
+    inputs: Res<Vec<GameInput>>,
+    local_player: Res<LocalPlayer>,
 ) {
-    rotation_timer.timer.tick(time.delta());
-    if !input.pressed(KeyCode::Q) && !input.pressed(KeyCode::E) {
-        return;
-    }
+    let mut local_player_turned = false;
+    for player in player_query.iter_mut() {
+        let input = inputs[player.handle as usize].buffer[0];
+        let action: Actions = input.into();
 
-    if !rotation_timer.timer.finished() {
-        return;
+        if let Some(turn) = &action.turn {
+            if player.handle as usize == local_player.handle {
+                local_player_turned = true;
+            }
+            if turn == &TurnDirection::Clockwise {
+                orientation.0[player.handle as usize].turn_clockwise();
+            } else {
+                orientation.0[player.handle as usize].turn_anti_clockwise();
+            }
+        }
     }
-    rotation_timer.timer.reset();
-
-    if input.pressed(KeyCode::Q) {
-        *orientation = orientation.turn_anti_clockwise();
-    } else {
-        *orientation = orientation.turn_clockwise();
+    if !local_player_turned {
+        return;
     }
     let player_position = orient
-        .get_mut(local_player.get_single().expect("No player? O.o"))
+        .get_mut(local_player.entity)
         .expect("Player not oriented")
         .translation;
     for mut transform in orient.iter_mut() {
         let current_position = transform.translation;
-        transform.look_at(orientation.camera_position() + current_position, Vec3::Y);
+        transform.look_at(orientation.0[local_player.handle].camera_position() + current_position, Vec3::Y);
     }
     let mut camera_transform = camera.single_mut();
     *camera_transform =
-        Transform::from_translation(orientation.camera_position() + player_position)
+        Transform::from_translation(orientation.0[local_player.handle].camera_position() + player_position)
             .looking_at(player_position, Vec3::Y);
 }
 

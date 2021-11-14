@@ -10,20 +10,41 @@ pub struct ActionsPlugin;
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Actions>()
-            .with_input_system(set_movement_actions);
+            .with_input_system(set_actions);
     }
 }
 
 #[derive(Default)]
 pub struct Actions {
     pub player_movement: Option<Vec2>,
+    pub turn: Option<TurnDirection>
 }
 
-fn set_movement_actions(
+#[derive(PartialEq)]
+pub enum TurnDirection {
+    Clockwise,
+    AntiClockwise
+}
+
+fn set_actions(
     _handle: In<PlayerHandle>,
+    time: Res<Time>,
+    mut rotation_timer: Local<RotationTimer>,
     mut previous_action: ResMut<Actions>,
     keyboard_input: Res<Input<KeyCode>>,
 ) -> Vec<u8> {
+    rotation_timer.timer.tick(time.delta());
+    previous_action.turn = None;
+    if (GameControl::TurnClockwise.pressed(&keyboard_input) || GameControl::TurnAntiClockwise.pressed(&keyboard_input)) && rotation_timer.timer.finished() {
+        rotation_timer.timer.reset();
+
+        if GameControl::TurnClockwise.pressed(&keyboard_input) {
+            previous_action.turn = Some(TurnDirection::Clockwise);
+        } else {
+            previous_action.turn = Some(TurnDirection::AntiClockwise);
+        }
+    }
+
     if GameControl::Up.just_released(&keyboard_input)
         || GameControl::Up.pressed(&keyboard_input)
         || GameControl::Left.just_released(&keyboard_input)
@@ -77,4 +98,16 @@ fn set_movement_actions(
     }
 
     vec![(&*previous_action as &Actions).into()]
+}
+
+pub(crate) struct RotationTimer {
+    timer: Timer,
+}
+
+impl Default for RotationTimer {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(0.2, false),
+        }
+    }
 }

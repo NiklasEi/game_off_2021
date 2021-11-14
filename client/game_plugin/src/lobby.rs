@@ -1,4 +1,5 @@
 use crate::{GameState, FPS};
+use crate::orientation::{Orientation, PlayerOrientations};
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
 use bevy_ggrs::CommandsExt;
@@ -122,10 +123,14 @@ fn lobby_system(
     // turn on sparse saving
     p2p_session.set_sparse_saving(true).unwrap();
 
+    let mut orientations = vec![];
+
     for (i, player) in players.into_iter().enumerate() {
         p2p_session
             .add_player(player, i)
             .expect("failed to add player");
+
+        orientations.push(Orientation::North);
 
         if player == PlayerType::Local {
             // set input delay for the local player
@@ -134,6 +139,7 @@ fn lobby_system(
             commands.insert_resource(LocalPlayerHandle(i));
         }
     }
+    commands.insert_resource(PlayerOrientations(orientations));
 
     // set default expected update frequency (affects synchronization timings between players)
     p2p_session.set_fps(FPS).unwrap();
