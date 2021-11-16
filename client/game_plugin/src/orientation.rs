@@ -1,9 +1,9 @@
-use crate::player::{LocalPlayer, PlayerCamera, Player};
 use crate::actions::{Actions, TurnDirection};
+use crate::player::{LocalPlayer, Player, PlayerCamera};
 use bevy::math::Mat2;
 use bevy::prelude::*;
-use std::ops::Mul;
 use ggrs::GameInput;
+use std::ops::Mul;
 
 const CAMERA_DISTANCE: f32 = 90.;
 
@@ -124,12 +124,16 @@ pub fn turn_camera(
         .translation;
     for mut transform in orient.iter_mut() {
         let current_position = transform.translation;
-        transform.look_at(orientation.0[local_player.handle].camera_position() + current_position, Vec3::Y);
+        transform.look_at(
+            orientation.0[local_player.handle].camera_position() + current_position,
+            Vec3::Y,
+        );
     }
     let mut camera_transform = camera.single_mut();
-    *camera_transform =
-        Transform::from_translation(orientation.0[local_player.handle].camera_position() + player_position)
-            .looking_at(player_position, Vec3::Y);
+    *camera_transform = Transform::from_translation(
+        orientation.0[local_player.handle].camera_position() + player_position,
+    )
+    .looking_at(player_position, Vec3::Y);
 }
 
 #[cfg(test)]

@@ -1,5 +1,6 @@
-use crate::{GameState, FPS};
+use crate::menu::GameSessionState;
 use crate::orientation::{Orientation, PlayerOrientations};
+use crate::{GameState, FPS};
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
 use bevy_ggrs::CommandsExt;
@@ -23,13 +24,8 @@ impl Plugin for LobbyPlugin {
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands, args: Res<Args>, task_pool: Res<IoTaskPool>) {
-    let room_id = match &args.room {
-        Some(id) => id.clone(),
-        None => format!("next_{}", &args.players),
-    };
-
-    let room_url = format!("{}/{}", &args.matchbox, room_id);
+fn start_matchbox_socket(mut commands: Commands, args: Res<Args>, task_pool: Res<IoTaskPool>, game_session_state: Res<GameSessionState>) {
+    let room_url = format!("{}/{}", &args.matchbox, game_session_state.code.clone());
     info!("connecting to matchbox server: {:?}", room_url);
     let (socket, message_loop) = WebRtcNonBlockingSocket::new(room_url);
 
@@ -49,6 +45,7 @@ fn lobby_startup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    session_state: Res<GameSessionState>,
 ) {
     // All this is just for spawning centered text.
     commands.spawn_bundle(UiCameraBundle::default());
@@ -72,15 +69,23 @@ fn lobby_startup(
                         justify_content: JustifyContent::Center,
                         ..Default::default()
                     },
-                    text: Text::with_section(
-                        "Entering lobby...",
-                        TextStyle {
+                    text: {
+                        let style = TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: 96.,
                             color: Color::BLACK,
-                        },
-                        Default::default(),
-                    ),
+                        };
+                        let mut text = Text::with_section(
+                            "Entering lobby...",
+                            style.clone(),
+                            Default::default(),
+                        );
+                        text.sections.push(TextSection {
+                            value: format!("\nRoom: {}", session_state.code),
+                            style,
+                        });
+                        text
+                    },
                     ..Default::default()
                 })
                 .insert(LobbyText);
@@ -95,14 +100,14 @@ fn lobby_system(
     args: Res<Args>,
     mut socket: ResMut<Option<WebRtcNonBlockingSocket>>,
     mut commands: Commands,
-    mut query: Query<&mut Text, With<LobbyText>>,
+    mut query: Query<&mut Text, With<LobbyText>>
 ) {
     let socket = socket.as_mut();
 
     socket.as_mut().unwrap().accept_new_connections();
-    let connected_peers = socket.as_ref().unwrap().connected_peers().len();
-    let remaining = args.players - (connected_peers + 1);
-    query.single_mut().sections[0].value = format!("Waiting for {} more player(s)", remaining);
+    let connected_peers = socket.as_ref().unwrap().connected_peers().len() + 1;
+    let remaining = args.players - connected_peers;
+    query.single_mut().sections[0].value = format!("{} connected", connected_peers);
 
     if remaining > 0 {
         return;
@@ -160,7 +165,6 @@ fn lobby_cleanup(query: Query<Entity, With<LobbyUI>>, mut commands: Commands) {
 
 pub struct Args {
     pub matchbox: String,
-    pub room: Option<String>,
     pub players: usize,
     pub log_filter: String,
 }
@@ -169,7 +173,6 @@ impl Default for Args {
     fn default() -> Self {
         Args {
             matchbox: "ws://127.0.0.1:3536".to_owned(),
-            room: None,
             players: 2,
             log_filter: "info".to_owned(),
         }

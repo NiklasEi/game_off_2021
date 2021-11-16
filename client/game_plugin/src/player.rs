@@ -1,19 +1,19 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::lobby::LocalPlayerHandle;
-use crate::orientation::{Orient, turn_camera, PlayerOrientations};
+use crate::orientation::{turn_camera, Orient, PlayerOrientations};
 use crate::GameState;
+use bevy::pbr::AmbientLight;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession};
-use bevy::pbr::AmbientLight;
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
 pub struct LocalPlayer {
     pub handle: usize,
-    pub entity: Entity
+    pub entity: Entity,
 }
 
 #[derive(Component)]
@@ -33,7 +33,8 @@ impl Plugin for PlayerPlugin {
         app.insert_resource(AmbientLight {
             color: Color::rgb(1.0, 1.0, 1.0),
             brightness: 0.4,
-        }).add_system_set(
+        })
+        .add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player)
                 .with_system(spawn_camera)
@@ -54,13 +55,11 @@ fn spawn_camera(
 ) {
     let mut camera = OrthographicCameraBundle::new_3d();
     camera.orthographic_projection.scale = 100.0;
-    camera.transform =
-        Transform::from_translation(orientation.0[local_player.0].camera_position()).looking_at(Vec3::ZERO, Vec3::Y);
+    camera.transform = Transform::from_translation(orientation.0[local_player.0].camera_position())
+        .looking_at(Vec3::ZERO, Vec3::Y);
 
     // camera
-    commands
-        .spawn_bundle(camera)
-        .insert(PlayerCamera);
+    commands.spawn_bundle(camera).insert(PlayerCamera);
 }
 
 fn spawn_tree(
@@ -75,8 +74,10 @@ fn spawn_tree(
         commands
             .spawn_bundle(SpriteBundle {
                 material: materials.add(texture_assets.tree.clone().into()),
-                transform: Transform::from_translation(position)
-                    .looking_at(orientation.0[local_player.0].camera_position() + position, Vec3::Y),
+                transform: Transform::from_translation(position).looking_at(
+                    orientation.0[local_player.0].camera_position() + position,
+                    Vec3::Y,
+                ),
                 ..Default::default()
             })
             .insert(Orient);
@@ -138,7 +139,7 @@ fn spawn_player(
             let entity_id = entity.id();
             commands.insert_resource(LocalPlayer {
                 handle: handle as usize,
-                entity: entity_id
+                entity: entity_id,
             });
         }
     }
@@ -163,7 +164,8 @@ fn move_player(
 
             if local_player.0 == player.handle as usize {
                 let mut camera_position = camera.single_mut();
-                camera_position.translation = player_transform.translation + orientation.0[player.handle as usize].camera_position();
+                camera_position.translation = player_transform.translation
+                    + orientation.0[player.handle as usize].camera_position();
             }
         }
     }

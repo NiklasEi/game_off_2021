@@ -70,7 +70,7 @@ impl From<u8> for Actions {
 
         Actions {
             player_movement: Some(player_movement),
-            turn
+            turn,
         }
     }
 }
@@ -81,7 +81,7 @@ pub enum GameControl {
     Left,
     Right,
     TurnClockwise,
-    TurnAntiClockwise
+    TurnAntiClockwise,
 }
 
 impl GameControl {
@@ -103,12 +103,8 @@ impl GameControl {
                 keyboard_input.just_released(KeyCode::D)
                     || keyboard_input.just_released(KeyCode::Right)
             }
-            GameControl::TurnClockwise => {
-                keyboard_input.just_released(KeyCode::E)
-            }
-            GameControl::TurnAntiClockwise => {
-                keyboard_input.just_released(KeyCode::Q)
-            }
+            GameControl::TurnClockwise => keyboard_input.just_released(KeyCode::E),
+            GameControl::TurnAntiClockwise => keyboard_input.just_released(KeyCode::Q),
         }
     }
 
@@ -126,12 +122,8 @@ impl GameControl {
             GameControl::Right => {
                 keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right)
             }
-            GameControl::TurnClockwise => {
-                keyboard_input.pressed(KeyCode::E)
-            }
-            GameControl::TurnAntiClockwise => {
-                keyboard_input.pressed(KeyCode::Q)
-            }
+            GameControl::TurnClockwise => keyboard_input.pressed(KeyCode::E),
+            GameControl::TurnAntiClockwise => keyboard_input.pressed(KeyCode::Q),
         }
     }
 
@@ -152,12 +144,8 @@ impl GameControl {
                 keyboard_input.just_pressed(KeyCode::D)
                     || keyboard_input.just_pressed(KeyCode::Right)
             }
-            GameControl::TurnClockwise => {
-                keyboard_input.just_pressed(KeyCode::E)
-            }
-            GameControl::TurnAntiClockwise => {
-                keyboard_input.just_pressed(KeyCode::Q)
-            }
+            GameControl::TurnClockwise => keyboard_input.just_pressed(KeyCode::E),
+            GameControl::TurnAntiClockwise => keyboard_input.just_pressed(KeyCode::Q),
         }
     }
 }

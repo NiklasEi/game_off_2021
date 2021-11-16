@@ -37,16 +37,16 @@ impl Plugin for GamePlugin {
             .with_update_frequency(FPS)
             .register_rollback_type::<Transform>()
             .register_rollback_type::<PlayerOrientations>()
+            .add_plugin(MenuPlugin)
             .add_plugin(LobbyPlugin)
             .add_plugin(LoadingPlugin)
-            .add_plugin(MenuPlugin)
             .add_plugin(ActionsPlugin)
             .add_plugin(PlayerPlugin);
 
-        #[cfg(debug_assertions)]
-        {
-            app.add_plugin(FrameTimeDiagnosticsPlugin::default())
-                .add_plugin(LogDiagnosticsPlugin::default());
-        }
+        // #[cfg(debug_assertions)]
+        // {
+        //     app.add_plugin(FrameTimeDiagnosticsPlugin::default())
+        //         .add_plugin(LogDiagnosticsPlugin::default());
+        // }
     }
 }

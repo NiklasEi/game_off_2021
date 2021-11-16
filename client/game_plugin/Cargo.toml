@@ -20,7 +20,7 @@ native = [
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", rev = "6a8a8c9d21f32e0e46623db9438813b009f9e014", default-features = false }
 bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", rev = "b1916e76d81aeb5097dadf7c0458488e670deb47" }
-rand = "0.8.3"
+rand = "0.8"
 ggrs = "0.5"
 bevy_ggrs = { git = "https://github.com/gschup/bevy_ggrs", rev = "12ba7a8d4355a5db445d28ab65714b71d4decdd9" }
 matchbox_socket = { path = "../../../matchbox/matchbox_socket", features = ["ggrs-socket"] }

@@ -17,13 +17,13 @@ impl Plugin for ActionsPlugin {
 #[derive(Default)]
 pub struct Actions {
     pub player_movement: Option<Vec2>,
-    pub turn: Option<TurnDirection>
+    pub turn: Option<TurnDirection>,
 }
 
 #[derive(PartialEq)]
 pub enum TurnDirection {
     Clockwise,
-    AntiClockwise
+    AntiClockwise,
 }
 
 fn set_actions(
@@ -35,7 +35,10 @@ fn set_actions(
 ) -> Vec<u8> {
     rotation_timer.timer.tick(time.delta());
     previous_action.turn = None;
-    if (GameControl::TurnClockwise.pressed(&keyboard_input) || GameControl::TurnAntiClockwise.pressed(&keyboard_input)) && rotation_timer.timer.finished() {
+    if (GameControl::TurnClockwise.pressed(&keyboard_input)
+        || GameControl::TurnAntiClockwise.pressed(&keyboard_input))
+        && rotation_timer.timer.finished()
+    {
         rotation_timer.timer.reset();
 
         if GameControl::TurnClockwise.pressed(&keyboard_input) {
