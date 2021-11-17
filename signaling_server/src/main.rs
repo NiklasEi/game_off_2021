@@ -1,12 +1,10 @@
-use clap::Parser;
 use log::info;
 use std::env;
 use warp::{http::StatusCode, hyper::Method, Filter, Rejection, Reply};
 
-pub use args::Args;
 pub use signaling::matchbox::PeerId;
+use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
 
-mod args;
 mod signaling;
 
 #[tokio::main]
@@ -14,8 +12,9 @@ async fn main() {
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "matchbox_server=info");
     }
+    let port = env::var("PORT").ok().unwrap_or("3536".to_owned());
+    let host: SocketAddr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0,0,0,0), port.parse().unwrap()));
     pretty_env_logger::init();
-    let args = Args::parse();
 
     let health_route = warp::path("health").and_then(health_handler);
 
@@ -59,7 +58,7 @@ async fn main() {
         .with(log);
 
     info!("Starting matchbox signaling server");
-    warp::serve(routes).run(args.host).await;
+    warp::serve(routes).run(host).await;
 }
 
 pub async fn health_handler() -> std::result::Result<impl Reply, Rejection> {
