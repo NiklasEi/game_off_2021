@@ -3,7 +3,8 @@
 #   Build a web release by running `cargo make release` (release is the `build/web` directory)
 
 [env]
-TARGET_DIR = "target/wasm32-unknown-unknown/debug/"
+TARGET_DIR = "target/wasm32-unknown-unknown/release/"
+TARGET_DIR_DEBUG = "target/wasm32-unknown-unknown/debug/"
 
 [tasks.release]
 dependencies = ["build-and-bind-wasm", "copy-files-for-release"]
@@ -11,7 +12,7 @@ dependencies = ["build-and-bind-wasm", "copy-files-for-release"]
 [tasks.serve]
 command = "basic-http-server"
 args = ["-x", "build/web/"]
-dependencies = ["build-and-bind-wasm-debug", "copy-files-for-release", "basic-http-server"]
+dependencies = ["build-and-bind-wasm-debug", "copy-files", "basic-http-server"]
 
 [tasks.build-and-bind-wasm]
 args = ["--out-dir", "${TARGET_DIR}", "--out-name", "wasm", "--target", "web", "--no-typescript", "${TARGET_DIR}${CARGO_MAKE_CRATE_NAME}.wasm"]
@@ -19,7 +20,7 @@ command = "wasm-bindgen"
 dependencies = ["cargo-build-web", "wasm-bindgen-cli"]
 
 [tasks.build-and-bind-wasm-debug]
-args = ["--out-dir", "${TARGET_DIR}", "--out-name", "wasm", "--target", "web", "--no-typescript", "${TARGET_DIR}${CARGO_MAKE_CRATE_NAME}.wasm"]
+args = ["--out-dir", "${TARGET_DIR_DEBUG}", "--out-name", "wasm", "--target", "web", "--no-typescript", "${TARGET_DIR_DEBUG}${CARGO_MAKE_CRATE_NAME}.wasm"]
 command = "wasm-bindgen"
 dependencies = ["cargo-build-web-debug", "wasm-bindgen-cli"]
 
@@ -40,20 +41,43 @@ install_crate = {crate_name = "basic-http-server", binary = "basic-http-server",
 [tasks.copy-files-for-release]
 script_runner = "@duckscript"
 script = [
-'''
-target = set "./build/web/target"
-web = set "./build/web"
-windows = set "./build/windows"
+    '''
+    target = set "./build/web/target"
+    web = set "./build/web"
+    windows = set "./build/windows"
 
-rm -r ${web}
-mkdir ${target}
+    rm -r ${web}
+    mkdir ${target}
 
-cp ${windows}/icon.ico ${web}/favicon.ico
+    cp ${windows}/icon.ico ${web}/favicon.ico
 
-cp ${TARGET_DIR}${CARGO_MAKE_CRATE_NAME}.wasm ${target}/${CARGO_MAKE_CRATE_NAME}.wasm
-cp ${TARGET_DIR}wasm.js ${target}/wasm.js
-cp ${TARGET_DIR}wasm_bg.wasm ${target}/wasm_bg.wasm
-cp ./index.html ${web}/index.html
-cp ./assets ${web}
-cp ./credits ${web}
-''']
+    cp ${TARGET_DIR}${CARGO_MAKE_CRATE_NAME}.wasm ${target}/${CARGO_MAKE_CRATE_NAME}.wasm
+    cp ${TARGET_DIR}wasm.js ${target}/wasm.js
+    cp ${TARGET_DIR}wasm_bg.wasm ${target}/wasm_bg.wasm
+    cp ./index.html ${web}/index.html
+    cp ./assets ${web}
+    cp ./credits ${web}
+    '''
+]
+
+[tasks.copy-files]
+script_runner = "@duckscript"
+script = [
+    '''
+    target = set "./build/web/target"
+    web = set "./build/web"
+    windows = set "./build/windows"
+
+    rm -r ${web}
+    mkdir ${target}
+
+    cp ${windows}/icon.ico ${web}/favicon.ico
+
+    cp ${TARGET_DIR_DEBUG}${CARGO_MAKE_CRATE_NAME}.wasm ${target}/${CARGO_MAKE_CRATE_NAME}.wasm
+    cp ${TARGET_DIR_DEBUG}wasm.js ${target}/wasm.js
+    cp ${TARGET_DIR_DEBUG}wasm_bg.wasm ${target}/wasm_bg.wasm
+    cp ./index.html ${web}/index.html
+    cp ./assets ${web}
+    cp ./credits ${web}
+    '''
+]
