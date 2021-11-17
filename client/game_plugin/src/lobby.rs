@@ -172,7 +172,10 @@ pub struct Args {
 impl Default for Args {
     fn default() -> Self {
         Args {
+            #[cfg(debug_assertions)]
             matchbox: "ws://127.0.0.1:3536".to_owned(),
+            #[cfg(not(debug_assertions))]
+            matchbox: "ws://nj-game-off-2021.herokuapp.com".to_owned(),
             players: 2,
             log_filter: "info".to_owned(),
         }
