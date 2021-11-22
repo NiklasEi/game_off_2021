@@ -14,8 +14,6 @@ use crate::player::PlayerPlugin;
 
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
 
-// #[cfg(debug_assertions)]
-// use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
 const FPS: u32 = 60;

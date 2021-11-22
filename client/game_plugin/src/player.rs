@@ -89,17 +89,15 @@ fn spawn_map(
     mut meshes: ResMut<Assets<Mesh>>,
     texture_assets: Res<TextureAssets>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
+    orientation: Res<PlayerOrientations>,
+    local_player: Res<LocalPlayerHandle>,
 ) {
     for column in -5..=5 {
         for row in -5..=5 {
-            let texture = if column == row {
-                texture_assets.ground.clone()
-            } else {
-                texture_assets.grass.clone()
-            };
             commands.spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 64.0 })),
-                material: materials.add(texture.into()),
+                material: materials.add(texture_assets.ground.clone().into()),
                 transform: Transform::from_translation(Vec3::new(
                     64. * column.clone() as f32,
                     0.,
@@ -108,6 +106,25 @@ fn spawn_map(
                 ..Default::default()
             });
         }
+    }
+
+    let grass_positions = vec![
+        Vec3::new(118., 11., 0.),
+        Vec3::new(22., 11., 187.),
+        Vec3::new(-84., 11., 54.),
+        Vec3::new(-89., 11., -35.),
+    ];
+    for position in grass_positions {
+        commands
+            .spawn_bundle(SpriteBundle {
+                material: color_materials.add(texture_assets.grass.clone().into()),
+                transform: Transform::from_translation(position).looking_at(
+                    orientation.0[local_player.0].camera_position() + position,
+                    Vec3::Y,
+                ),
+                ..Default::default()
+            })
+            .insert(Orient);
     }
 }
 

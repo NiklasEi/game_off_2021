@@ -24,7 +24,12 @@ impl Plugin for LobbyPlugin {
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands, args: Res<Args>, task_pool: Res<IoTaskPool>, game_session_state: Res<GameSessionState>) {
+fn start_matchbox_socket(
+    mut commands: Commands,
+    args: Res<Args>,
+    task_pool: Res<IoTaskPool>,
+    game_session_state: Res<GameSessionState>,
+) {
     let room_url = format!("{}/{}", &args.matchbox, game_session_state.code.clone());
     info!("connecting to matchbox server: {:?}", room_url);
     let (socket, message_loop) = WebRtcNonBlockingSocket::new(room_url);
@@ -100,7 +105,7 @@ fn lobby_system(
     args: Res<Args>,
     mut socket: ResMut<Option<WebRtcNonBlockingSocket>>,
     mut commands: Commands,
-    mut query: Query<&mut Text, With<LobbyText>>
+    mut query: Query<&mut Text, With<LobbyText>>,
 ) {
     let socket = socket.as_mut();
 

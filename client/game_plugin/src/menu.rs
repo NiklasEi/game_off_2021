@@ -5,7 +5,6 @@ use rand::{thread_rng, Rng};
 
 pub struct MenuPlugin;
 
-
 const CODE_CHARS: &'static [u8] = b"ABCDEFGHKLMNOPRSTUVWXYZ";
 const ACCEPTED_KEY_INPUT: [KeyCode; 26] = [
     KeyCode::A,
@@ -33,7 +32,7 @@ const ACCEPTED_KEY_INPUT: [KeyCode; 26] = [
     KeyCode::Y,
     KeyCode::Z,
     KeyCode::Back,
-    KeyCode::Return
+    KeyCode::Return,
 ];
 
 /// This plugin is responsible for the game menu (containing only one button...)
